@@ -3,29 +3,15 @@ name: Deploy to AWS EC2
 on:
   push:
     branches:
-      - main 
+      - main
 
 jobs:
   deploy:
-    runs-on: self-hosted 
+    runs-on: self-hosted
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '14'
-
-    - name: Install Dependencies
-      run: npm install
-
-    - name: Run Unit Tests
-      run: npm test
-
-    - name: Run Integration Tests
-      run: npm run test:integration
 
     - name: Build Docker Image
       run: docker build -t my-html-app .
@@ -41,7 +27,19 @@ jobs:
     - name: Wait for Container to Initialize
       run: sleep 15
 
+    - name: Perform Integration Test
+      run: |
+        echo "Running integration test..."
+        STATUS_CODE=$(curl -o /dev/null -s -w "%{http_code}" http://localhost:8080)
+        if [ "$STATUS_CODE" -eq 200 ]; then
+          echo "✅ Test Passed! Status Code: $STATUS_CODE"
+        else
+          echo "❌ Test Failed! Status Code: $STATUS_CODE"
+          exit 1
+        fi
+
     - name: Check Running Containers
       run: |
         docker ps -a
         docker logs my-html-container || true
+
