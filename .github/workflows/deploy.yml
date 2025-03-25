@@ -16,6 +16,22 @@ jobs:
       - name: Build Docker Image
         run: docker build -t my-html-app .
 
+      - name: Run Container for Testing
+        run: docker run -d -p 8080:80 --name test-html-container my-html-app
+
+      - name: Perform Integration Tests
+        run: |
+          # Example: Replace this with your actual test command
+          chmod +x ./test.sh
+          ./test.sh
+        env:
+          TEST_URL: http://localhost:8080
+
+      - name: Stop and Remove Test Container
+        run: |
+          docker stop test-html-container
+          docker rm test-html-container
+
       - name: Stop and Remove Old Container
         run: |
           docker stop my-html-container || true
@@ -23,3 +39,4 @@ jobs:
 
       - name: Run New Container
         run: docker run -d -p 8080:80 --name my-html-container my-html-app
+
